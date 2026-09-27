@@ -58,12 +58,7 @@ This created a security boundary where guest Wi-Fi users could not access intern
 
 ### 5. Verification with End-to-End Pings
 
-Connectivity checks were performed to validate the final configuration:
-
-- Office devices could communicate with other allowed business devices
-- POS devices remained reachable for required network services
-- Guest devices were blocked from reaching Office and POS networks
-- successful ping tests confirmed the expected ACL behavior and routing configuration
+Connectivity checks were used to test the expected routing and guest isolation behavior. The Guest-to-Office and Guest-to-POS tests exposed an issue in Cafe1's `GUEST-LAN` DHCP pool, which was corrected.
 
 ## Device Summary
 
@@ -107,6 +102,8 @@ The network was then reorganized into separate Office, POS, and Guest segments u
 
 ![VLAN-based topology](Screenshots/VLAN_Topology.png)
 
+![Phase 1.5 topology](Screenshots/CAFE-Phase_1.5.png)
+
 ### Step 3: Router-on-a-stick and dot1Q subinterfaces
 
 The router was configured for inter-VLAN routing using 802.1Q trunking and subinterfaces for each VLAN.
@@ -127,9 +124,21 @@ An extended ACL was created to block Guest VLAN communication with the Office an
 
 ![ACL creation and application](Screenshots/ACL_Creation.png)
 
-### Step 6: Verification with end-to-end pings
+### Step 6: Cafe2 configuration
 
-The final validation confirmed the ACL behavior.
+Cafe2's switch and router configuration is complete. These screenshots document its VLAN switching, router subinterfaces, DHCP pools, and ACL.
+
+![Cafe2 switch configuration](Screenshots/Cafe2_Switch_Config.png)
+
+![Cafe2 router dot1Q configuration](Screenshots/Cafe2_Router_dot1Q_Config.png)
+
+![Cafe2 router DHCP pool configuration](Screenshots/Cafe2_Router_Pool_Config.png)
+
+![Cafe2 router ACL configuration](Screenshots/Cafe2_Router_ACL.png)
+
+### Step 7: Verification with end-to-end pings
+
+The Guest-to-Office and Guest-to-POS test screenshots below show the issue discovered during testing; they do not confirm that the ACL was working. The Cafe1 `GUEST-LAN` DHCP pool configuration was corrected after this issue was identified.
 
 ![Guest to Office test](Screenshots/Guest_to_OFFICE_Test.png)
 
@@ -142,6 +151,8 @@ One of the most important takeaways from this lab was realizing that a Layer 3 s
 The cafe network is small and does not generate a large amount of traffic, so the performance bottleneck of routing through a single router interface was not a significant concern. In this case, the dedicated router and Layer 2 switch offered a cleaner separation of responsibilities, easier troubleshooting, and a more secure design. By keeping the routing function on the router and the switching function on the switch, the network is easier to understand, maintain, and scale in the future if needed.
 
 I also learned that a Layer 3 switch can be a great option in larger or more traffic-heavy environments, but for a small deployment like this one, the cost and security benefits of a dedicated router were more practical. This approach gave me a strong understanding of how VLANs, trunking, DHCP, and ACLs work together in a realistic network design.
+
+While troubleshooting the Cafe1 DHCP issue, I consulted a Claude model that suggested rate limiting as a possible cause. But one network was already configured correctly and working, while the other was not, which made a shared default rate limit unlikely. Routing between the other two VLANs also worked, pointing me back to the router configuration. Comparing both router configurations side by side revealed a typo in the Cafe1 DHCP pool. AI can be a useful troubleshooting tool, but its suggestions are not always correct. Testing them against what is working, and stepping back to inspect the configuration, can uncover a simple mistake that a plausible-sounding explanation might obscure.
 
 ## Key Takeaways
 
